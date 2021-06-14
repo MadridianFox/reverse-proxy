@@ -8,15 +8,16 @@
   (clojure.string/replace uri #"/([^/]+)/.*" "$1"))
 
 (defn proxy-path [uri]
-  (clojure.string/replace uri #"/[^/]+(/.*)" "$1")) 
+  (clojure.string/replace uri #"/[^/]+(/.*)" "$1"))
 
 (defn pipe [request]
-  (let [{method :request-method path :uri} request
-        key (proxy-key path)
+  (let [{method :request-method path :uri req-query :query-string req-headers :headers} request
         path' (proxy-path path)
         backend (storage/findBackend key)
+        url (str backend path (when req-query (str "?" req-query)))
         response (http/request {:method method
-                                :url (str backend path)
+                                :url url
+                                :headers req-headers
                                 :connection-manager cm
                                 :stream true
                                 :throw-exceptions false})
